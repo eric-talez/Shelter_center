@@ -3,6 +3,9 @@ package org.royshelter;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.boot.test.system.CapturedOutput;
+import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import static org.assertj.core.api.Assertions.*;
@@ -103,7 +106,8 @@ class AnimalControllerTest {
         api(completed).perform(get("/api/animals/mock-sfacc-01"))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.id").value("mock-sfacc-01"));
     }
-    @Test void unexpectedFailureIsNotLesson() throws Exception {
+    @Test @ExtendWith(OutputCaptureExtension.class)
+    void unexpectedFailureIsNotLesson(CapturedOutput output) throws Exception {
         var broken = new AnimalExercises() {
             @Override public ArrayList<Animal> filterBySpecies(ArrayList<Animal> a, String s) {
                 throw new IllegalStateException("private diagnostic");
@@ -111,7 +115,12 @@ class AnimalControllerTest {
         };
         api(broken).perform(get("/api/animals").param("species", "CAT"))
                 .andExpect(status().isInternalServerError()).andExpect(jsonPath("$.code").value("INTERNAL_ERROR"))
-                .andExpect(jsonPath("$.lessonId").isEmpty()).andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("private diagnostic"))));
+                .andExpect(jsonPath("$.lessonId").isEmpty())
+                .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("private diagnostic"))))
+                .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("IllegalStateException"))))
+                .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("org.royshelter"))));
+        assertThat(output.getAll()).contains("ERROR", "java.lang.IllegalStateException: private diagnostic",
+                "\tat org.royshelter.AnimalControllerTest");
     }
     @Test void whitespaceQueryIsUnfiltered() throws Exception {
         api(new AnimalExercises()).perform(get("/api/animals").param("q", "  "))

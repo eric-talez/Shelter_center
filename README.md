@@ -8,6 +8,7 @@ Java는 검색·조회 규칙, Python/NiceGUI는 입력과 표시를 담당합�
 
 - **JDK 21**(JRE만으로는 부족), **Python 3.13**, 코드 편집기, 브라우저가 필요합니다.
 - Maven은 별도 설치하지 않습니다. 저장소의 Maven Wrapper가 Maven 3.9.11을 받습니다. 처음 실행할 때 인터넷이 필요합니다.
+- Linux에서는 Maven Wrapper 실행 전에 `unzip`을 설치하세요(예: Ubuntu/Debian은 `sudo apt install unzip`).
 - Java는 Spring Boot 4.1.2, Python 패키지는 [requirements.txt](frontend/requirements.txt)의 고정 버전을 사용합니다.
 - 아래 명령은 모두 프로젝트 최상위 폴더에서 실행합니다. 편집기로 `Roy_SHELTER` 폴더를 연 뒤 터미널을 여세요. macOS/Linux 명령과 Windows PowerShell 명령을 구별하세요.
 
@@ -121,6 +122,7 @@ Windows PowerShell:
 | --- | --- |
 | Java 버전 오류 / `JAVA_HOME` 오류 | `java -version` 또는 `"$JAVA_HOME/bin/java" -version`이 21인지 확인하고 터미널 1에서 다시 설정합니다. |
 | Wrapper 권한 오류(macOS/Linux) | `chmod +x backend/mvnw` 후 같은 명령을 다시 실행합니다. |
+| Linux에서 Wrapper 체크섬 오류 / 다운로드 파일 손상 경고 | `unzip -v`로 설치 여부를 확인하세요. `unzip`이 없으면 Wrapper가 받은 `.tar.gz`가 ZIP용 체크섬과 달라 실패합니다. `unzip` 설치 후 같은 명령을 다시 실행하세요. |
 | 패키지를 못 찾음 | 프로젝트 폴더에서 `.venv`의 Python으로 설치·실행했는지 확인합니다. 첫 다운로드에는 인터넷이 필요합니다. |
 | 8080/8081 포트 사용 중 | 이미 실행한 이 프로젝트의 터미널을 찾아 Ctrl-C로 종료합니다. 모르는 프로세스는 종료하지 마세요. 아래 다른 포트 명령을 사용할 수 있습니다. |
 | `Java is unavailable` / `BACKEND_UNAVAILABLE` | 터미널 1의 시작 로그와 주소를 확인하고 Java를 실행한 후 화면의 `Retry`를 누릅니다. 목록 0개와 서버 연결 실패는 다릅니다. |

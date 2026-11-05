@@ -1,11 +1,15 @@
 package org.royshelter;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
 public class ApiErrors {
+    private static final Logger logger = LoggerFactory.getLogger(ApiErrors.class);
+
     @ExceptionHandler(InvalidRequest.class)
     public ResponseEntity<Error> invalid(InvalidRequest exception) {
         return ResponseEntity.badRequest().body(new Error("INVALID_REQUEST", exception.getMessage(), null));
@@ -23,6 +27,7 @@ public class ApiErrors {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Error> unexpected(Exception exception) {
+        logger.error("Unexpected request failure", exception);
         return ResponseEntity.internalServerError().body(new Error("INTERNAL_ERROR", "요청을 처리하지 못했습니다.", null));
     }
 
