@@ -1,0 +1,42 @@
+[
+  {
+    "id": "sfacc",
+    "name": "San Francisco Animal Care & Control",
+    "city": "San Francisco",
+    "websiteUrl": "https://www.sfanimalcare.org/adoptable-animals/",
+    "phone": "+1-415-554-6364",
+    "sourceUrl": "https://www.sfanimalcare.org/contact/"
+  },
+  {
+    "id": "phs",
+    "name": "Peninsula Humane Society & SPCA",
+    "city": "Burlingame",
+    "websiteUrl": "https://phs-spca.org/adopt/",
+    "phone": "+1-650-340-7022",
+    "sourceUrl": "https://phs-spca.org/adopt/"
+  },
+  {
+    "id": "hssv",
+    "name": "Humane Society Silicon Valley",
+    "city": "Milpitas",
+    "websiteUrl": "https://www.hssv.org/adopt/",
+    "phone": "+1-408-262-2133",
+    "sourceUrl": "https://www.hssv.org/about-us/hours-locations/"
+  },
+  {
+    "id": "svaca",
+    "name": "Silicon Valley Animal Control Authority",
+    "city": "Santa Clara",
+    "websiteUrl": "https://www.svaca.com/adoptions",
+    "phone": "+1-408-764-0344",
+    "sourceUrl": "https://www.svaca.com/adoptions"
+  },
+  {
+    "id": "sjacs",
+    "name": "San José Animal Care & Services",
+    "city": "San José",
+    "websiteUrl": "https://www.sanjoseca.gov/your-government/departments-offices/animal-care-services/services/pet-adoption",
+    "phone": "+1-408-794-7297",
+    "sourceUrl": "https://www.sanjoseca.gov/your-government/departments-offices/animal-care-services/services/animal-control"
+  }
+]

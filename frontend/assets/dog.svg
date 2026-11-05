@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 300" role="img" aria-label="Original illustration of a friendly dog">
+  <rect width="480" height="300" fill="#e9eddd"/><circle cx="377" cy="61" r="30" fill="#e2bd6f" opacity=".7"/>
+  <path d="M65 275c80-65 272-65 352 0" fill="#d4dfc2"/>
+  <path d="M161 100c-57-17-66 97-26 105l43-67m141-38c57-17 66 97 26 105l-43-67" fill="#845c3e"/>
+  <path d="M166 115c0-66 148-66 148 0v69c0 75-148 75-148 0z" fill="#c99d66"/>
+  <ellipse cx="240" cy="189" rx="48" ry="39" fill="#f3e3c7"/>
+  <circle cx="204" cy="147" r="7" fill="#304936"/><circle cx="276" cy="147" r="7" fill="#304936"/>
+  <path d="M226 178q14-10 28 0l-14 15z" fill="#304936"/>
+  <path d="M240 192v9m-17 1q17 16 34 0" stroke="#304936" stroke-width="5" fill="none" stroke-linecap="round"/>
+  <path d="M186 230q54 24 108 0v15q-54 24-108 0" fill="#375b42"/><circle cx="240" cy="254" r="10" fill="#e2bd6f"/>
+</svg>
