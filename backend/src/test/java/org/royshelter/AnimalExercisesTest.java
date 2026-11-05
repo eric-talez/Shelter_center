@@ -1,7 +1,6 @@
 package org.royshelter;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Tag;
@@ -39,17 +38,6 @@ class AnimalExercisesTest {
         @Test void missingIdGivesNull() { assertThat(exercises.findById(animals(), "missing")).isNull(); }
     }
     @Nested class Lesson4 {
-        @Test void selectedSheltersAreOrAndPreserveSourceOrder() {
-            assertThat(exercises.filterByShelters(animals(), new HashSet<>(List.of("phs", "sfacc"))))
-                    .containsExactly(puppy, cat, dog);
-            assertThat(exercises.filterByShelters(animals(), new HashSet<>(List.of("sfacc"))))
-                    .containsExactly(puppy, dog);
-        }
-        @Test void emptySelectionGivesAllAnimals() {
-            assertThat(exercises.filterByShelters(animals(), new HashSet<>())).containsExactly(puppy, cat, dog);
-        }
-    }
-    @Nested class Lesson5 {
         @Test void trimmedQueryMatchesNameIgnoringCase() {
             assertThat(exercises.filterByQuery(animals(), "  LuN  ")).containsExactly(puppy);
         }

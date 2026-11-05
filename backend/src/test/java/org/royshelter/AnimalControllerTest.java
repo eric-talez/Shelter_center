@@ -1,7 +1,6 @@
 package org.royshelter;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.web.servlet.MockMvc;
@@ -41,7 +40,7 @@ class AnimalControllerTest {
                 .andExpect(jsonPath("$.lessonId").isEmpty());
     }
     @Test void rejectsMalformedQueries() throws Exception {
-        for (String[] query : new String[][]{{"maxAgeMonths","abc"}, {"unknown","x"}, {"shelterId","missing"},
+        for (String[] query : new String[][]{{"maxAgeMonths","abc"}, {"unknown","x"},
                 {"species","BIRD"}, {"purpose","OTHER"}, {"maxAgeMonths","2147483648"}, {"maxAgeMonths","1.5"}}) {
             api(unfinished()).perform(get("/api/animals").param(query[0], query[1]))
                     .andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("INVALID_REQUEST"));
@@ -49,6 +48,29 @@ class AnimalControllerTest {
         for (String key : List.of("species", "maxAgeMonths", "q", "purpose")) {
             api(unfinished()).perform(get("/api/animals").param(key, "", ""))
                     .andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("INVALID_REQUEST"));
+        }
+    }
+    @Test void shelterFilteringIsUnsupportedEvenForKnownOrEmptyIds() throws Exception {
+        for (String id : List.of("sfacc", "missing", "")) {
+            api(unfinished()).perform(get("/api/animals").param("shelterId", id))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.code").value("INVALID_REQUEST"));
+        }
+    }
+    @Test void keywordAndPurposeReportLesson4() throws Exception {
+        var unfinishedSearch = new AnimalExercises() {
+            @Override public ArrayList<Animal> filterByQuery(ArrayList<Animal> a, String q) {
+                throw new ExerciseNotImplementedException("lesson-4");
+            }
+            @Override public ArrayList<Animal> filterByPurpose(ArrayList<Animal> a, String p) {
+                throw new ExerciseNotImplementedException("lesson-4");
+            }
+        };
+        for (String[] query : new String[][]{{"q", "Luna"}, {"purpose", "FOSTER"}}) {
+            api(unfinishedSearch).perform(get("/api/animals").param(query[0], query[1]))
+                    .andExpect(status().is(501))
+                    .andExpect(jsonPath("$.code").value("EXERCISE_NOT_IMPLEMENTED"))
+                    .andExpect(jsonPath("$.lessonId").value("lesson-4"));
         }
     }
     @Test void reportsUnfinishedLesson() throws Exception {
@@ -97,7 +119,7 @@ class AnimalControllerTest {
     }
     @Test void emptySelectionIsUnfiltered() throws Exception {
         api(new AnimalExercises()).perform(get("/api/animals").param("species", "").param("maxAgeMonths", "")
-                .param("purpose", "").param("shelterId", "", ""))
+                .param("purpose", ""))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.total").value(20));
     }
     @Test void composesValidatedFiltersInOrderAndPassesPreviousResults() throws Exception {
@@ -110,14 +132,13 @@ class AnimalControllerTest {
             }
             @Override public ArrayList<Animal> filterBySpecies(ArrayList<Animal> a, String s) { assertThat(s).isEqualTo("DOG"); return step(a,"species"); }
             @Override public ArrayList<Animal> filterByMaxAge(ArrayList<Animal> a, int age) { assertThat(age).isEqualTo(24); return step(a,"age"); }
-            @Override public ArrayList<Animal> filterByShelters(ArrayList<Animal> a, HashSet<String> ids) { assertThat(ids).containsExactlyInAnyOrder("sfacc","phs"); return step(a,"shelter"); }
             @Override public ArrayList<Animal> filterByQuery(ArrayList<Animal> a, String q) { assertThat(q).isEqualTo("Luna"); return step(a,"query"); }
             @Override public ArrayList<Animal> filterByPurpose(ArrayList<Animal> a, String p) { assertThat(p).isEqualTo("ADOPT"); return step(a,"purpose"); }
         };
         api(completed).perform(get("/api/animals").param("species","DOG").param("maxAgeMonths","24")
-                .param("shelterId","sfacc","phs","sfacc").param("q"," Luna ").param("purpose","ADOPT"))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.total").value(15));
-        assertThat(calls).containsExactly("species","age","shelter","query","purpose");
+                .param("q"," Luna ").param("purpose","ADOPT"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.total").value(16));
+        assertThat(calls).containsExactly("species","age","query","purpose");
         assertThat(catalog.animals()).hasSize(20);
     }
 }
