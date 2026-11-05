@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 300" role="img" aria-label="Original illustration of a curious cat">
+  <rect width="480" height="300" fill="#efe7d9"/><circle cx="96" cy="66" r="31" fill="#ccdab9"/>
+  <path d="M65 275c80-65 272-65 352 0" fill="#e2d5c0"/>
+  <path d="M162 139l1-78 68 39h18l68-39 1 78c34 127-190 127-156 0" fill="#929985"/>
+  <path d="M178 110V86l32 21m60 0 32-21v24" fill="#d9b9a4"/>
+  <ellipse cx="240" cy="192" rx="45" ry="33" fill="#f4e9d5"/>
+  <path d="M191 153q14-12 28 0m42 0q14-12 28 0" stroke="#304936" stroke-width="6" fill="none" stroke-linecap="round"/>
+  <path d="m229 181 11 12 11-12z" fill="#7a5a4d"/>
+  <path d="M240 193v9m-14 0q14 12 28 0m-49-15-45-8m45 20-45 9m115-21 45-8m-45 20 45 9" stroke="#485b48" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <path d="m222 105 5 18m13-20v18m18-16-5 18" stroke="#626f5b" stroke-width="6" stroke-linecap="round"/>
+</svg>
