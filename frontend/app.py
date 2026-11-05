@@ -1,7 +1,6 @@
 """Run with `python frontend/app.py`; Java owns all catalog search rules."""
 import os
 from pathlib import Path
-from urllib.parse import quote
 
 import httpx
 from nicegui import app, ui
@@ -33,14 +32,12 @@ async def close_api():
     await http_client.aclose()
 
 
-def build_search_params(species, max_age, shelter_ids, query, purpose):
+def build_search_params(species, max_age, query, purpose):
     params = []
     if species:
         params.append(('species', species))
     if max_age is not None and str(max_age) != '':
         params.append(('maxAgeMonths', str(max_age)))
-    for shelter_id in shelter_ids or []:
-        params.append(('shelterId', shelter_id))
     if query:
         params.append(('q', query))
     if purpose:
@@ -95,19 +92,20 @@ app.colors(primary='#264f3b', secondary='#62735a')
 
 def page_header():
     ui.label('Explore · Learn · Connect').classes('eyebrow')
-    ui.label('Bay Area Shelter Hub').mark('h1')
+    ui.html('Bay Area Shelter Hub', tag='h1').classes('text-4xl sm:text-5xl font-bold leading-tight')
     ui.label('Discover local shelters through fictional animal profiles, then connect '
              'with a real Bay Area shelter.').classes('text-lg muted')
     ui.label(NOTICE).classes('notice w-full')
 
 
-def render_error(error):
+def render_error(error, *, detail=False):
     with ui.column().classes('error-box w-full').props('role=alert'):
         if error.code == 'EXERCISE_NOT_IMPLEMENTED':
             ui.label(f'Learning exercise · {error.lesson_id or "unfinished"}').classes('font-bold text-lg')
             ui.label('This feature is waiting for your Java exercise. Implement the matching TODO in:')
             ui.label('backend/src/main/java/org/royshelter/AnimalExercises.java').classes('break-all font-mono text-sm')
-            ui.label('Use Reset to return to the whole catalog. Detail lookup is lesson-3.').classes('muted')
+            ui.label('Use Back to catalog to continue browsing shelters.' if detail else
+                     'Use Reset to return to the whole catalog.').classes('muted')
         elif error.code in ('BACKEND_UNAVAILABLE', 'BACKEND_TIMEOUT'):
             ui.label('Java is unavailable' if error.code == 'BACKEND_UNAVAILABLE' else 'Java took too long').classes('font-bold text-lg')
             ui.label('Start the Java server on port 8080, then select Retry. Keep this page open.')
@@ -141,14 +139,18 @@ def animal_card(animal, shelters):
         animal_image(animal)
         with ui.column().classes('card-body'):
             with ui.row().classes('w-full items-center justify-between'):
-                ui.label(animal['name']).mark('h2')
+                shelter = shelters.get(animal['shelterId'])
+                with ui.element('h2').classes('text-xl font-bold'):
+                    if shelter:
+                        ui.link(animal['name'], shelter['websiteUrl'], new_tab=True).props('rel=noopener')
+                    else:
+                        ui.label(animal['name'])
                 ui.label('Demo').classes('demo')
             ui.label(f"{animal['species'].title()} · {animal['ageMonths']} months · {animal['breed']}").classes('muted')
             shelter = shelters.get(animal['shelterId'])
             if shelter:
                 ui.label(shelter['name']).classes('font-semibold')
                 ui.label(shelter['city']).classes('text-sm muted')
-            ui.link('View fictional profile →', '/animals/' + quote(animal['id'], safe='')).classes('font-semibold')
             if shelter:
                 shelter_links(shelter)
 
@@ -159,15 +161,14 @@ async def catalog_page():
     with ui.column().classes('page'):
         page_header()
         with ui.column().classes('filters w-full'):
-            ui.label('Find a companion, practice Java').mark('h2')
-            ui.label('Filters are learning exercises (lessons 1, 2, 4 and 5). An unfinished '
+            ui.html('Find a companion, practice Java', tag='h2').classes('text-2xl font-bold')
+            ui.label('Filters are learning exercises (lessons 1, 2 and 4). An unfinished '
                      'exercise will show a helpful note; the whole catalog works now.').classes('muted')
             with ui.element('div').classes('filter-grid'):
                 species = ui.select({'DOG': 'Dog', 'CAT': 'Cat'}, label='Species · lesson-1', clearable=True).classes('w-full')
                 max_age = ui.input('Maximum age in months · lesson-2').props('type=number min=0 step=1').classes('w-full')
-                shelter_select = ui.select({}, label='Shelters · lesson-4', multiple=True).props('use-chips clearable').classes('w-full')
-                query = ui.input('Search name or breed · lesson-5').classes('w-full')
-                purpose = ui.select({'ADOPT': 'Adoption', 'FOSTER': 'Foster'}, label='Purpose · lesson-5', clearable=True).classes('w-full')
+                query = ui.input('Search name or breed · lesson-4').classes('w-full')
+                purpose = ui.select({'ADOPT': 'Adoption', 'FOSTER': 'Foster'}, label='Purpose · lesson-4', clearable=True).classes('w-full')
             with ui.row():
                 ui.button('Search', on_click=lambda: search()).props('no-caps')
                 ui.button('Reset', on_click=lambda: reset()).props('outline no-caps')
@@ -184,8 +185,7 @@ async def catalog_page():
                 render_error(state['error'])
                 ui.button('Retry', on_click=lambda: search()).props('outline no-caps')
             else:
-                shelter_select.set_options({s['id']: s['name'] for s in state['shelters']})
-                ui.label(f"{state['total']} animal profiles").mark('h2')
+                ui.label(f"{state['total']} animal profiles").classes('text-2xl font-bold').props('role=heading aria-level=2')
                 ui.label('Fictional profiles · real local shelters').classes('muted')
                 if not state['items']:
                     ui.label('No animals match these filters.')
@@ -195,13 +195,12 @@ async def catalog_page():
                         animal_card(animal, shelters)
 
     async def search():
-        params = build_search_params(species.value, max_age.value, shelter_select.value, query.value, purpose.value)
+        params = build_search_params(species.value, max_age.value, query.value, purpose.value)
         await refresh_catalog(api, params, state, show_results)
 
     async def reset():
         species.set_value(None)
         max_age.set_value('')
-        shelter_select.set_value([])
         query.set_value('')
         purpose.set_value(None)
         await search()
@@ -226,14 +225,14 @@ async def detail_page(animal_id: str):
         except ApiError as error:
             content.clear()
             with content:
-                render_error(error)
+                render_error(error, detail=True)
                 ui.button('Retry', on_click=load_detail).props('outline no-caps')
         else:
             content.clear()
             with content, ui.column().classes('detail w-full'):
                 ui.label('Fictional animal profile — this animal is not available for adoption.').classes('notice w-full')
                 animal_image(animal)
-                ui.label(animal['name']).mark('h2')
+                ui.label(animal['name']).classes('text-xl font-bold').props('role=heading aria-level=2')
                 ui.label(f"{animal['species'].title()} · {animal['ageMonths']} months · {animal['breed']}")
                 ui.label(animal['description'])
                 for shelter in shelters:

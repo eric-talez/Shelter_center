@@ -7,12 +7,11 @@ from frontend.app import build_search_params, refresh_catalog
 from frontend.tests.test_api_client import ANIMAL, SHELTER
 
 
-def test_search_params_keep_zero_repeated_shelters_and_backend_values():
-    assert build_search_params('CAT', 0, ['sfacc', 'hssv'], 'A&B', 'FOSTER') == [
-        ('species', 'CAT'), ('maxAgeMonths', '0'), ('shelterId', 'sfacc'),
-        ('shelterId', 'hssv'), ('q', 'A&B'), ('purpose', 'FOSTER'),
+def test_search_params_keep_zero_and_backend_values_without_shelter_filter():
+    assert build_search_params('CAT', 0, 'A&B', 'FOSTER') == [
+        ('species', 'CAT'), ('maxAgeMonths', '0'), ('q', 'A&B'), ('purpose', 'FOSTER'),
     ]
-    assert build_search_params(None, '', [], '', None) == []
+    assert build_search_params(None, '', '', None) == []
 
 
 def test_older_request_completion_cannot_overwrite_newer_selection():

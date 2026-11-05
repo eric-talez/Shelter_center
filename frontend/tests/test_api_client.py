@@ -40,15 +40,14 @@ def test_success_shapes(method, argument, path, payload, expected):
     assert run_request(respond, method, argument) == expected
 
 
-def test_repeated_shelters_and_search_are_url_encoded_without_losing_zero():
+def test_species_and_search_are_url_encoded_without_losing_zero():
     def respond(request):
-        assert request.url.params.get_list('shelterId') == ['sf acc', 'hssv']
+        assert request.url.params['species'] == 'CAT'
         assert request.url.params['q'] == 'A&B + cat'
         assert request.url.params['maxAgeMonths'] == '0'
-        assert b'shelterId=sf+acc&shelterId=hssv' in request.url.query
+        assert b'q=A%26B+%2B+cat' in request.url.query
         return httpx.Response(200, json={'items': [], 'total': 0})
-    assert run_request(respond, argument=[('shelterId', 'sf acc'), ('shelterId', 'hssv'),
-                                        ('q', 'A&B + cat'), ('maxAgeMonths', '0')]) == {'items': [], 'total': 0}
+    assert run_request(respond, argument=[('species', 'CAT'), ('q', 'A&B + cat'), ('maxAgeMonths', '0')]) == {'items': [], 'total': 0}
 
 
 @pytest.mark.parametrize(('status', 'code', 'lesson'), [
