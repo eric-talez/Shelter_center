@@ -1,0 +1,10 @@
+.DS_Store
+.tools/
+.venv/
+.runtime/
+**/target/
+**/__pycache__/
+**/.pytest_cache/
+.superpowers/
+.idea/
+*.iml
