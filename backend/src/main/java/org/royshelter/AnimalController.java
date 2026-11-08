@@ -1,5 +1,8 @@
 package org.royshelter;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.springframework.util.MultiValueMap;
@@ -26,7 +29,15 @@ public class AnimalController {
         if (search.maxAgeMonths() != null) items = exercises.filterByMaxAge(items, search.maxAgeMonths());
         if (!search.query().isEmpty()) items = exercises.filterByQuery(items, search.query());
         if (!search.purpose().isEmpty()) items = exercises.filterByPurpose(items, search.purpose());
-        return Map.of("items", items, "total", items.size());
+        Integer shelterCount = null;
+        HashMap<String, Integer> speciesCounts = null;
+        var unfinishedLessons = new ArrayList<String>();
+        try { shelterCount = exercises.countDistinctShelters(items); }
+        catch (ExerciseNotImplementedException exception) { unfinishedLessons.add("lesson-6"); }
+        try { speciesCounts = exercises.countBySpecies(items); }
+        catch (ExerciseNotImplementedException exception) { unfinishedLessons.add("lesson-7"); }
+        return Map.of("items", items, "total", items.size(),
+                "summary", new Summary(shelterCount, speciesCounts, unfinishedLessons));
     }
 
     @GetMapping("/api/shelters")
@@ -68,5 +79,6 @@ public class AnimalController {
 
     private static ApiErrors.InvalidRequest invalid(String message) { return new ApiErrors.InvalidRequest(message); }
 
+    public record Summary(Integer shelterCount, HashMap<String, Integer> speciesCounts, List<String> unfinishedLessons) { }
     private record Search(String species, Integer maxAgeMonths, String query, String purpose) { }
 }

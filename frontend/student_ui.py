@@ -1,11 +1,23 @@
-"""Optional Python exercise: keep the useful profile while this is unfinished."""
-from nicegui import ui
+"""Pure Python lesson: build labels; the provided UI helpers display them."""
 
 
-def render_opportunities(animal: dict) -> None:
-    # TODO (lesson-5): Use if statements and animal's flags to explain opportunities.
-    with ui.column().classes('learning-note w-full'):
-        ui.label('Learning exercise · lesson-5').classes('font-bold')
-        ui.label('Opportunity labels are unfinished. In frontend/student_ui.py, use the '
-                 'adoptable and fosterable values to add them. The profile above is still usable.')
-        ui.label('For real adoption or foster opportunities, contact the shelter directly.')
+class ExerciseNotImplementedError(Exception):
+    """Identify an unfinished student exercise without hiding programming errors."""
+
+
+def opportunity_labels(animal: dict) -> list[str]:
+    """Return opportunity strings for one animal dictionary without changing it.
+
+    Read the independent boolean values at animal['adoptable'] and animal['fosterable'].
+    Build a new list of strings: 'Mock adoption option' before 'Mock foster option'.
+    Both True means both labels, in that order; both False means an empty list.
+    For example, True/False means ['Mock adoption option']; False/True means
+    ['Mock foster option']. These are fictional opportunities, not real applications.
+    The provided get_opportunity_labels helper recognizes only the dedicated exception;
+    render_opportunity_badges displays your strings without deciding which to create.
+    """
+    # Step 1: Prepare a new local list for the result strings.
+    # Step 2: Read both boolean values from the input dictionary.
+    # Step 3: Check each independent flag and add its exact label when True.
+    # Step 4: Return the list; remove the final lesson exception when complete.
+    raise ExerciseNotImplementedError('lesson-5')

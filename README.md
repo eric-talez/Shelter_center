@@ -2,7 +2,7 @@
 
 북부 캘리포니아의 실제 보호소 5곳을 **가상 동물 20마리**로 둘러봅니다. 처음부터 모든 보호소의 동물을 모아 보여주며, 동물 이름 또는 `Visit shelter website`를 누르면 해당 보호소의 공식 사이트가 새 탭으로 열립니다. 보호소를 먼저 선택하는 단계는 없습니다. 실제 입양·임시 보호 신청과 현재 동물 확인은 보호소에서 진행합니다. 이 프로젝트는 보호소와 제휴하지 않습니다.
 
-Java는 검색·조회 규칙, Python/NiceGUI는 입력과 표시를 담당합니다. 미완성 과제를 선택하면 오류 대신 해당 수업 번호를 안내합니다. `Reset`을 누르면 전체 목록으로 돌아옵니다. 서버와 기본 목록은 정답 구현 없이 실행됩니다.
+Java는 검색·조회·결과 요약 규칙, Python/NiceGUI는 입력과 표시를 담당합니다. 미완성 과제를 선택하면 오류 대신 해당 수업 번호를 안내합니다. `Reset`을 누르면 전체 목록으로 돌아옵니다. 서버와 기본 목록은 정답 구현 없이 실행됩니다.
 
 ## 준비
 
@@ -80,7 +80,7 @@ Windows PowerShell:
 .\.venv\Scripts\python.exe frontend\app.py
 ```
 
-브라우저에서 [학습 화면](http://127.0.0.1:8081/)을 엽니다. 자동으로 브라우저를 열지는 않습니다. Demo 안내, 전체 20마리, 동물 이름을 통한 공식 보호소 연결을 확인하세요. 필터는 수업 1·2·4를 구현해야 동작합니다. [ID 조회 연습 페이지](http://127.0.0.1:8081/animals/mock-sfacc-01)는 수업 3용 선택 과제이며 기본 탐색 경로에서는 사용하지 않습니다.
+브라우저에서 [학습 화면](http://127.0.0.1:8081/)을 엽니다. 자동으로 브라우저를 열지는 않습니다. Demo 안내, 전체 20마리, 동물 이름을 통한 공식 보호소 연결을 확인하세요. 필터는 수업 1·2·4를 구현해야 동작합니다. 수업 6·7의 결과 요약은 서로 독립적입니다. 하나만 완성해도 해당 보호소 수 또는 DOG/CAT 개수가 표시됩니다. `0`은 완성된 계산의 실제 값이고 미완성 `null`은 해당 수업 안내로 표시됩니다. 수업 5 안내는 페이지에 한 번 나오며 카드는 계속 사용할 수 있습니다. [ID 조회 연습 페이지](http://127.0.0.1:8081/animals/mock-sfacc-01)는 수업 3용 선택 과제이며 기본 탐색 경로에서는 사용하지 않습니다.
 
 각 서버를 종료하려면 해당 터미널에서 **Ctrl-C**를 누릅니다. Python 종료 시 `KeyboardInterrupt` 또는 `CancelledError`가 표시될 수 있으며, Ctrl-C 직후라면 종료 과정의 출력입니다. Java 파일을 저장한 뒤에는 터미널 1에서 Ctrl-C 후 Java 명령을 다시 실행하고 화면에서 검색 또는 새로 고침을 하세요. Python 파일을 바꾸면 터미널 2도 종료 후 재실행하고 브라우저를 새로 고칩니다. 자동 재시작은 사용하지 않습니다.
 
@@ -114,7 +114,21 @@ Windows PowerShell:
 .\backend\mvnw.cmd -f backend\pom.xml -Pexercises '-Dtest=AnimalExercisesTest$Lesson1' test
 ```
 
-처음에는 `ExerciseNotImplementedException`과 `lesson-1` 때문에 실패하는 것이 정상입니다. 작은따옴표는 `$Lesson1`을 셸이 바꾸지 않도록 필요합니다. 전체 학생 과제를 한꺼번에 실행하는 `-Pexercises test`도 처음에는 실패합니다. [학생 가이드](docs/student-guide.md)에서 준비 → 수업 1 → 2 → 선택 수업 3 → 4 → 5 순서로 진행하세요. [교사용 가이드](docs/teacher-guide.md), [API 규약](docs/api.md), [데이터 출처](docs/data-sources.md)도 제공합니다. 정답 구현은 포함하지 않습니다.
+처음에는 `ExerciseNotImplementedException`과 `lesson-1` 때문에 실패하는 것이 정상입니다. 작은따옴표는 `$Lesson1`을 셸이 바꾸지 않도록 필요합니다. 전체 학생 과제를 한꺼번에 실행하는 `-Pexercises test`도 처음에는 실패합니다. Python 수업 5도 서버 없이 별도로 검사합니다:
+
+```sh
+.venv/bin/python -m pytest frontend/exercises -q
+```
+
+Windows PowerShell:
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest frontend\exercises -q
+```
+
+초기에는 네 조합이 `ExerciseNotImplementedError: lesson-5`로 실패합니다. 기본 Python 검사는 연결과 표시를 검사하고, 위 opt-in 검사는 학생 함수의 결과를 검사합니다. 고정된 테스트 총개수 대신 실행 결과의 통과·실패 원인을 확인하세요.
+
+[학생 가이드](docs/student-guide.md)에서 준비 → 수업 1 → 2 → 4 → 6 → 7 → 5 순서로 진행하세요. 수업 3은 선택이며 수업 5의 선행 조건이 아닙니다. 학생이 수정할 곳은 Java의 `AnimalExercises.java`(수업 1·2·3·4·6·7)와 Python의 `frontend/student_ui.py`(수업 5)뿐입니다. `ExerciseHelpers.normalizeText(String)`와 `ExerciseHelpers.supportedSpecies()`는 제공된 도우미이고, Python 표시 함수는 `frontend/ui_helpers.py`가 제공합니다. [교사용 가이드](docs/teacher-guide.md), [API 규약](docs/api.md), [데이터 출처](docs/data-sources.md)도 제공합니다. 정답 구현은 포함하지 않습니다.
 
 ## 실행이 안 될 때
 

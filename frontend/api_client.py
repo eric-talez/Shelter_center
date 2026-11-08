@@ -26,6 +26,27 @@ def _valid_shelter(value):
                                           ('id', 'name', 'city', 'websiteUrl', 'phone', 'sourceUrl'))
 
 
+def _valid_summary(value):
+    if not isinstance(value, dict) or not all(key in value for key in
+                                            ('shelterCount', 'speciesCounts', 'unfinishedLessons')):
+        return False
+    shelter_count = value['shelterCount']
+    species_counts = value['speciesCounts']
+    if shelter_count is not None and (type(shelter_count) is not int or shelter_count < 0):
+        return False
+    if species_counts is not None and (
+            not isinstance(species_counts, dict)
+            or not all(type(species_counts.get(species)) is int and species_counts[species] >= 0
+                       for species in ('DOG', 'CAT'))):
+        return False
+    expected_lessons = []
+    if shelter_count is None:
+        expected_lessons.append('lesson-6')
+    if species_counts is None:
+        expected_lessons.append('lesson-7')
+    return value['unfinishedLessons'] == expected_lessons
+
+
 class ShelterApi:
     def __init__(self, client: httpx.AsyncClient):
         self.client = client
@@ -54,7 +75,8 @@ class ShelterApi:
         value = await self._get('/api/animals', params)
         if (not isinstance(value, dict) or not isinstance(value.get('items'), list)
                 or not all(_valid_animal(item) for item in value['items'])
-                or type(value.get('total')) is not int or value['total'] < 0):
+                or type(value.get('total')) is not int or value['total'] < 0
+                or not _valid_summary(value.get('summary'))):
             raise ApiError('INVALID_RESPONSE', 'Java returned an invalid animal list.')
         return value
 

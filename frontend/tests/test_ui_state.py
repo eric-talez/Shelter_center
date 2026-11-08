@@ -4,7 +4,7 @@ import httpx
 
 from frontend.api_client import ShelterApi
 from frontend.app import build_search_params, refresh_catalog
-from frontend.tests.test_api_client import ANIMAL, SHELTER
+from frontend.tests.test_api_client import ANIMAL, SHELTER, SUMMARY, ZERO_SUMMARY
 
 
 def test_search_params_keep_zero_and_backend_values_without_shelter_filter():
@@ -25,8 +25,8 @@ def test_older_request_completion_cannot_overwrite_newer_selection():
             if request.url.params.get('species') == 'DOG':
                 first_started.set()
                 await release_first.wait()
-                return httpx.Response(200, json={'items': [ANIMAL], 'total': 1})
-            return httpx.Response(200, json={'items': [], 'total': 0})
+                return httpx.Response(200, json={'items': [ANIMAL], 'total': 1, 'summary': SUMMARY})
+            return httpx.Response(200, json={'items': [], 'total': 0, 'summary': ZERO_SUMMARY})
 
         state = {}
         async with httpx.AsyncClient(transport=httpx.MockTransport(respond), base_url='http://java.test') as client:
@@ -38,6 +38,7 @@ def test_older_request_completion_cannot_overwrite_newer_selection():
             await older
         assert state['items'] == []
         assert state['total'] == 0
+        assert state['summary'] == ZERO_SUMMARY
         assert state['error'] is None
         assert state['loading'] is False
     asyncio.run(run())
@@ -49,7 +50,7 @@ def test_failed_refresh_clears_previous_matches_as_soon_as_it_starts():
             if request.url.path == '/api/shelters':
                 return httpx.Response(200, json={'items': [SHELTER]})
             raise httpx.ConnectError('Java stopped', request=request)
-        state = {'items': [ANIMAL], 'total': 1}
+        state = {'items': [ANIMAL], 'total': 1, 'summary': SUMMARY}
         snapshots = []
         async with httpx.AsyncClient(transport=httpx.MockTransport(respond), base_url='http://java.test') as client:
             await refresh_catalog(ShelterApi(client), [], state,
@@ -57,8 +58,26 @@ def test_failed_refresh_clears_previous_matches_as_soon_as_it_starts():
         assert snapshots[0]['loading'] is True
         assert snapshots[0]['items'] == []
         assert snapshots[0]['total'] is None
+        assert snapshots[0]['summary'] is None
         assert state['items'] == []
         assert state['total'] is None
+        assert state['summary'] is None
         assert state['error'].code == 'BACKEND_UNAVAILABLE'
         assert state['loading'] is False
+    asyncio.run(run())
+
+
+def test_successful_refresh_clears_summary_while_loading():
+    async def run():
+        def respond(request):
+            if request.url.path == '/api/shelters':
+                return httpx.Response(200, json={'items': [SHELTER]})
+            return httpx.Response(200, json={'items': [], 'total': 0, 'summary': ZERO_SUMMARY})
+        state = {'items': [ANIMAL], 'total': 1, 'summary': SUMMARY}
+        snapshots = []
+        async with httpx.AsyncClient(transport=httpx.MockTransport(respond), base_url='http://java.test') as client:
+            await refresh_catalog(ShelterApi(client), [], state,
+                                  lambda: snapshots.append(dict(state)))
+        assert snapshots[0]['summary'] is None
+        assert snapshots[-1]['summary'] == ZERO_SUMMARY
     asyncio.run(run())

@@ -1,7 +1,9 @@
 package org.royshelter;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.system.CapturedOutput;
@@ -24,6 +26,98 @@ class AnimalControllerTest {
                 throw new ExerciseNotImplementedException("lesson-1");
             }
         };
+    }
+    private static class SummaryExercises extends AnimalExercises {
+        private final Integer shelters;
+        private final HashMap<String, Integer> species;
+        private final ArrayList<Animal> filtered;
+        private final ArrayList<String> calls = new ArrayList<>();
+
+        SummaryExercises(Integer shelters, HashMap<String, Integer> species, ArrayList<Animal> filtered) {
+            this.shelters = shelters;
+            this.species = species;
+            this.filtered = filtered;
+        }
+        @Override public ArrayList<Animal> filterBySpecies(ArrayList<Animal> animals, String species) {
+            return filtered;
+        }
+        @Override public int countDistinctShelters(ArrayList<Animal> animals) {
+            if (filtered != null) assertThat(animals).isSameAs(filtered);
+            calls.add("lesson-6");
+            if (shelters == null) throw new ExerciseNotImplementedException("lesson-6");
+            return shelters;
+        }
+        @Override public HashMap<String, Integer> countBySpecies(ArrayList<Animal> animals) {
+            if (filtered != null) assertThat(animals).isSameAs(filtered);
+            calls.add("lesson-7");
+            if (species == null) throw new ExerciseNotImplementedException("lesson-7");
+            return species;
+        }
+    }
+    @Test void unfinishedSummariesKeepCatalogAvailable() throws Exception {
+        var exercises = new SummaryExercises(null, null, null);
+        api(exercises).perform(get("/api/animals"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.total").value(20))
+                .andExpect(jsonPath("$.items.length()").value(20))
+                .andExpect(jsonPath("$.summary.shelterCount").value(org.hamcrest.Matchers.nullValue()))
+                .andExpect(jsonPath("$.summary.speciesCounts").value(org.hamcrest.Matchers.nullValue()))
+                .andExpect(jsonPath("$.summary.unfinishedLessons").value(org.hamcrest.Matchers.contains("lesson-6", "lesson-7")));
+        assertThat(exercises.calls).containsExactly("lesson-6", "lesson-7");
+    }
+    @Test void summariesCompleteIndependentlyOnTheSameFilteredList() throws Exception {
+        var filtered = new ArrayList<>(List.of(catalog.animals().getFirst()));
+        for (boolean shelterComplete : List.of(true, false)) {
+            var exercises = new SummaryExercises(shelterComplete ? 1 : null,
+                    shelterComplete ? null : new HashMap<>(Map.of("DOG", 1, "CAT", 0)), filtered);
+            var response = api(exercises).perform(get("/api/animals").param("species", "DOG"))
+                    .andExpect(status().isOk()).andExpect(jsonPath("$.total").value(1))
+                    .andExpect(jsonPath("$.items[0].id").value("mock-sfacc-01"))
+                    .andExpect(jsonPath("$.summary.unfinishedLessons")
+                            .value(org.hamcrest.Matchers.contains(shelterComplete ? "lesson-7" : "lesson-6")));
+            if (shelterComplete) {
+                response.andExpect(jsonPath("$.summary.shelterCount").value(1))
+                        .andExpect(jsonPath("$.summary.speciesCounts").value(org.hamcrest.Matchers.nullValue()));
+            } else {
+                response.andExpect(jsonPath("$.summary.shelterCount").value(org.hamcrest.Matchers.nullValue()))
+                        .andExpect(jsonPath("$.summary.speciesCounts.DOG").value(1))
+                        .andExpect(jsonPath("$.summary.speciesCounts.CAT").value(0));
+            }
+            assertThat(exercises.calls).containsExactly("lesson-6", "lesson-7");
+        }
+    }
+    @Test void completedEmptySummaryHasRealZeroCounts() throws Exception {
+        var exercises = new SummaryExercises(0, new HashMap<>(Map.of("DOG", 0, "CAT", 0)), new ArrayList<>());
+        api(exercises).perform(get("/api/animals").param("species", "CAT"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.items").isEmpty())
+                .andExpect(jsonPath("$.total").value(0))
+                .andExpect(jsonPath("$.summary.shelterCount").value(0))
+                .andExpect(jsonPath("$.summary.speciesCounts.DOG").value(0))
+                .andExpect(jsonPath("$.summary.speciesCounts.CAT").value(0))
+                .andExpect(jsonPath("$.summary.unfinishedLessons").value(org.hamcrest.Matchers.empty()));
+        assertThat(exercises.calls).containsExactly("lesson-6", "lesson-7");
+    }
+    @Test @ExtendWith(OutputCaptureExtension.class)
+    void unexpectedSummaryFailureRetainsSanitizedErrorAndDiagnostic(CapturedOutput output) throws Exception {
+        for (boolean breakShelters : List.of(true, false)) {
+            var broken = new SummaryExercises(1, new HashMap<>(Map.of("DOG", 1, "CAT", 0)), null) {
+                @Override public int countDistinctShelters(ArrayList<Animal> animals) {
+                    if (breakShelters) throw new IllegalStateException("private summary diagnostic");
+                    return super.countDistinctShelters(animals);
+                }
+                @Override public HashMap<String, Integer> countBySpecies(ArrayList<Animal> animals) {
+                    throw new IllegalStateException("private summary diagnostic");
+                }
+            };
+            api(broken).perform(get("/api/animals"))
+                    .andExpect(status().isInternalServerError())
+                    .andExpect(jsonPath("$.code").value("INTERNAL_ERROR"))
+                    .andExpect(jsonPath("$.lessonId").isEmpty())
+                    .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("private summary diagnostic"))))
+                    .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("IllegalStateException"))))
+                    .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("org.royshelter"))));
+        }
+        assertThat(output.getAll()).contains("ERROR", "java.lang.IllegalStateException: private summary diagnostic",
+                "\tat org.royshelter.AnimalControllerTest");
     }
     @Test void listsCatalogWithoutExercises() throws Exception {
         api(new AnimalExercises()).perform(get("/api/animals"))

@@ -7,10 +7,10 @@ from nicegui import app, ui
 
 if __package__:
     from .api_client import ApiError, ShelterApi
-    from . import student_ui
+    from .ui_helpers import get_opportunity_labels, render_opportunity_badges, render_summary
 else:
     from api_client import ApiError, ShelterApi
-    import student_ui
+    from ui_helpers import get_opportunity_labels, render_opportunity_badges, render_summary
 
 
 API_URL = os.environ.get('SHELTER_API_URL', 'http://127.0.0.1:8080')
@@ -48,18 +48,19 @@ def build_search_params(species, max_age, query, purpose):
 async def refresh_catalog(api, params, state, on_change):
     # Each page owns this dictionary; only its latest request may change the view.
     generation = state.get('generation', 0) + 1
-    state.update(generation=generation, loading=True, items=[], total=None, error=None)
+    state.update(generation=generation, loading=True, items=[], total=None, summary=None, error=None)
     on_change()
     try:
         shelters = await api.shelters()
         result = await api.animals(params)
     except ApiError as error:
         if state['generation'] == generation:
-            state.update(error=error, loading=False)
+            state.update(error=error, summary=None, loading=False)
             on_change()
     else:
         if state['generation'] == generation:
-            state.update(shelters=shelters, items=result['items'], total=result['total'], loading=False)
+            state.update(shelters=shelters, items=result['items'], total=result['total'],
+                         summary=result['summary'], loading=False)
             on_change()
 
 
@@ -134,7 +135,13 @@ def shelter_links(shelter):
     ui.label('Real shelter website · applications and current availability are handled by the shelter.').classes('text-xs muted')
 
 
-def animal_card(animal, shelters):
+def opportunity_notice():
+    ui.label('Learning exercise · lesson-5: opportunity labels are unfinished. '
+             'Complete opportunity_labels in frontend/student_ui.py. '
+             'For real opportunities, contact the shelter directly.').classes('learning-note w-full')
+
+
+def animal_card(animal, shelters, labels):
     with ui.card().classes('animal-card'):
         animal_image(animal)
         with ui.column().classes('card-body'):
@@ -147,6 +154,8 @@ def animal_card(animal, shelters):
                         ui.label(animal['name'])
                 ui.label('Demo').classes('demo')
             ui.label(f"{animal['species'].title()} · {animal['ageMonths']} months · {animal['breed']}").classes('muted')
+            if labels is not None:
+                render_opportunity_badges(labels)
             shelter = shelters.get(animal['shelterId'])
             if shelter:
                 ui.label(shelter['name']).classes('font-semibold')
@@ -187,12 +196,17 @@ async def catalog_page():
             else:
                 ui.label(f"{state['total']} animal profiles").classes('text-2xl font-bold').props('role=heading aria-level=2')
                 ui.label('Fictional profiles · real local shelters').classes('muted')
+                with ui.row().classes('w-full items-center gap-3'):
+                    render_summary(state['summary'])
+                opportunities = [(animal, get_opportunity_labels(animal)) for animal in state['items']]
+                if any(labels is None for _, labels in opportunities):
+                    opportunity_notice()
                 if not state['items']:
                     ui.label('No animals match these filters.')
                 shelters = {s['id']: s for s in state['shelters']}
                 with ui.element('div').classes('animal-grid'):
-                    for animal in state['items']:
-                        animal_card(animal, shelters)
+                    for animal, labels in opportunities:
+                        animal_card(animal, shelters, labels)
 
     async def search():
         params = build_search_params(species.value, max_age.value, query.value, purpose.value)
@@ -241,7 +255,11 @@ async def detail_page(animal_id: str):
                         ui.label(shelter['city'])
                         shelter_links(shelter)
                         ui.link('Call shelter: ' + shelter['phone'], 'tel:' + shelter['phone'])
-                student_ui.render_opportunities(animal)
+                labels = get_opportunity_labels(animal)
+                if labels is None:
+                    opportunity_notice()
+                else:
+                    render_opportunity_badges(labels)
     ui.timer(0.1, load_detail, once=True)
 
 
