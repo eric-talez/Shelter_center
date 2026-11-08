@@ -54,4 +54,29 @@ class AnimalExercisesTest {
             assertThat(exercises.filterByPurpose(animals(), "FOSTER")).containsExactly(cat, dog);
         }
     }
+    @Nested class Lesson6 {
+        @Test void countsDistinctSheltersWithoutChangingSource() {
+            var source = animals();
+            assertThat(exercises.countDistinctShelters(source)).isEqualTo(2);
+            assertThat(source).containsExactly(puppy, cat, dog);
+        }
+        @Test void emptyListHasZeroShelters() {
+            assertThat(exercises.countDistinctShelters(new ArrayList<>())).isZero();
+        }
+    }
+    @Nested class Lesson7 {
+        @Test void countsBothSpeciesWithoutChangingSource() {
+            var source = animals();
+            assertThat(exercises.countBySpecies(source)).containsOnly(entry("DOG", 2), entry("CAT", 1));
+            assertThat(source).containsExactly(puppy, cat, dog);
+        }
+        @Test void emptyListIncludesBothZeroCounts() {
+            assertThat(exercises.countBySpecies(new ArrayList<>())).containsOnly(entry("DOG", 0), entry("CAT", 0));
+        }
+        @Test void absentSpeciesStillHasAZeroCount() {
+            var source = new ArrayList<>(List.of(puppy, dog));
+            assertThat(exercises.countBySpecies(source)).containsOnly(entry("DOG", 2), entry("CAT", 0));
+            assertThat(source).containsExactly(puppy, dog);
+        }
+    }
 }

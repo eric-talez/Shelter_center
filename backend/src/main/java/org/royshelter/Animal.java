@@ -42,15 +42,23 @@ public final class Animal {
         this.demo = demo;
     }
 
+    /** Return the unique ID used as a lookup-map key. */
     public String getId() { return id; }
+    /** Return the display name for text search. */
     public String getName() { return name; }
+    /** Return the species code: DOG or CAT. */
     public String getSpecies() { return species; }
+    /** Return the breed text for substring search. */
     public String getBreed() { return breed; }
+    /** Return age in whole months, including 0 for newborns. */
     public int getAgeMonths() { return ageMonths; }
     public String getDescription() { return description; }
     public String getImageUrl() { return imageUrl; }
+    /** Return the shelter ID; several animals can share it. */
     public String getShelterId() { return shelterId; }
+    /** Return this fictional animal's adoption flag, independent of its foster flag. */
     public boolean isAdoptable() { return adoptable; }
+    /** Return this fictional animal's foster flag, independent of its adoption flag. */
     public boolean isFosterable() { return fosterable; }
     public boolean isDemo() { return demo; }
 }

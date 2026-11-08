@@ -36,11 +36,46 @@
       "demo": true
     }
   ],
-  "total": 20
+  "total": 20,
+  "summary": {
+    "shelterCount": null,
+    "speciesCounts": null,
+    "unfinishedLessons": ["lesson-6", "lesson-7"]
+  }
 }
 ```
 
-`items`는 동물 객체 배열, `total`은 필터 적용 후 그 배열의 개수입니다. 검색 성공인데 일치 항목이 없으면 200과 `{"items":[],"total":0}`입니다. `imageUrl`은 Python UI의 `/assets` 경로이며 Java 서버가 이미지를 제공하지 않습니다. 보호소 객체를 동물 안에 중첩하지 않고 `shelterId`로 별도 목록과 연결합니다.
+`items`는 동물 객체 배열, `total`은 필터 적용 후 그 배열의 개수입니다. 검색 성공인데 일치 항목이 없으면 200이고 `items`는 `[]`, `total`은 `0`입니다. 이때도 아래의 `summary`가 포함됩니다. `imageUrl`은 Python UI의 `/assets` 경로이며 Java 서버가 이미지를 제공하지 않습니다. 보호소 객체를 동물 안에 중첩하지 않고 `shelterId`로 별도 목록과 연결합니다.
+
+### Result summary
+
+`summary` describes the exact `items` list after all selected filters. Lesson 6 supplies `shelterCount`, the number of distinct shelter IDs. Lesson 7 supplies `speciesCounts`, with both `DOG` and `CAT` integer keys, including zero for an absent species. Each exercise uses the same filtered list independently.
+
+An unfinished summary metric is `null`, never a fabricated zero. Only its lesson appears in `unfinishedLessons`, ordered lesson-6 then lesson-7. Both unfinished summary stubs leave the catalog available with status 200, as shown above. Completing one exercise immediately exposes its result; for example, one DOG from one shelter with lesson 7 unfinished gives:
+
+```json
+{"shelterCount":1,"speciesCounts":null,"unfinishedLessons":["lesson-7"]}
+```
+
+If only lesson 6 is unfinished, that same result gives:
+
+```json
+{"shelterCount":null,"speciesCounts":{"DOG":1,"CAT":0},"unfinishedLessons":["lesson-6"]}
+```
+
+After both exercises are complete, a successful empty result is:
+
+```json
+{"items":[],"total":0,"summary":{"shelterCount":0,"speciesCounts":{"DOG":0,"CAT":0},"unfinishedLessons":[]}}
+```
+
+A completed nonempty summary for three animals with shelter IDs `sfacc`, `phs`, `sfacc` and species `DOG`, `CAT`, `DOG` is:
+
+```json
+{"shelterCount":2,"speciesCounts":{"DOG":2,"CAT":1},"unfinishedLessons":[]}
+```
+
+Only `ExerciseNotImplementedException` from a summary exercise becomes a missing metric. An unexpected exception from either summary method still returns the existing sanitized `INTERNAL_ERROR` 500 response and logs the diagnostic stack trace. Unfinished selected filters and ID lookup retain their existing 501 behavior; invalid queries still return 400 before exercises run.
 
 ## GET /api/shelters
 
@@ -76,7 +111,7 @@
 | 200 | 없음 | 목록/보호소/조회 성공. 0개 목록도 성공 |
 | 400 | `INVALID_REQUEST` | 동물 목록 쿼리의 알 수 없는 키, 중복 키 또는 잘못된 값 |
 | 404 | `NOT_FOUND` | 구현된 ID 조회가 `null` 반환 |
-| 501 | `EXERCISE_NOT_IMPLEMENTED` | 학생 TODO 미완성, lessonId로 수업 안내 |
+| 501 | `EXERCISE_NOT_IMPLEMENTED` | 선택한 필터 또는 ID 조회 TODO 미완성, lessonId로 수업 안내. 요약 수업 6·7 미완성은 200의 summary에 표시 |
 | 500 | `INTERNAL_ERROR` | 예상하지 못한 서버 예외. 내부 진단은 응답에서 숨김 |
 
 ```json
