@@ -109,9 +109,9 @@ def render_error(error, *, detail=False):
                      'Use Reset to return to the whole catalog.').classes('muted')
         elif error.code in ('BACKEND_UNAVAILABLE', 'BACKEND_TIMEOUT'):
             ui.label('Java is unavailable' if error.code == 'BACKEND_UNAVAILABLE' else 'Java took too long').classes('font-bold text-lg')
-            ui.label('Start the Java server on port 8080, then select Retry. Keep this page open.')
-            ui.label('From the project folder, with JDK 21 configured:').classes('text-sm')
-            ui.label('backend/mvnw -f backend/pom.xml spring-boot:run').classes('break-all font-mono text-sm')
+            ui.label(f'Check the Java server at {API_URL}, then select Retry. Keep this page open.').classes('break-all')
+            ui.label('Follow the README run instructions for this address and port, '
+                     'with JDK 21 configured.').classes('text-sm')
         elif error.code == 'NOT_FOUND':
             ui.label('Animal profile not found.').classes('font-bold text-lg')
             ui.label('This profile may have been removed. Return to the catalog to choose another.')
