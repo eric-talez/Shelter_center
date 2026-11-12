@@ -18,40 +18,58 @@ class AnimalExercisesTest {
     @Nested class Lesson1 {
         @Test void matchesSpeciesWithoutChangingSource() {
             var source = animals();
-            assertThat(exercises.filterBySpecies(source, "DOG")).containsExactly(puppy, dog);
+            // A distinct String catches reference equality instead of content equality.
+            assertThat(exercises.filterBySpecies(source, new String("DOG")))
+                    .isNotSameAs(source).containsExactly(puppy, dog);
             assertThat(source).containsExactly(puppy, cat, dog);
         }
         @Test void noMatchingSpeciesGivesEmptyList() {
-            assertThat(exercises.filterBySpecies(new ArrayList<>(List.of(puppy)), "CAT")).isEmpty();
+            assertThat(exercises.filterBySpecies(new ArrayList<>(List.of(puppy)), new String("CAT"))).isEmpty();
         }
     }
     @Nested class Lesson2 {
         @Test void ageBoundaryIsInclusive() {
-            assertThat(exercises.filterByMaxAge(animals(), 24)).containsExactly(puppy, cat);
+            var source = animals();
+            assertThat(exercises.filterByMaxAge(source, 24)).isNotSameAs(source).containsExactly(puppy, cat);
+            assertThat(source).containsExactly(puppy, cat, dog);
         }
         @Test void zeroMonthsIsValid() {
-            assertThat(exercises.filterByMaxAge(animals(), 0)).containsExactly(puppy);
+            var source = animals();
+            assertThat(exercises.filterByMaxAge(source, 0)).isNotSameAs(source).containsExactly(puppy);
+            assertThat(source).containsExactly(puppy, cat, dog);
         }
     }
     @Nested class Lesson3 {
-        @Test void findsExistingId() { assertThat(exercises.findById(animals(), "b")).isSameAs(cat); }
+        @Test void findsExistingId() { assertThat(exercises.findById(animals(), new String("b"))).isSameAs(cat); }
         @Test void missingIdGivesNull() { assertThat(exercises.findById(animals(), "missing")).isNull(); }
     }
     @Nested class Lesson4 {
         @Test void trimmedQueryMatchesNameIgnoringCase() {
-            assertThat(exercises.filterByQuery(animals(), "  LuN  ")).containsExactly(puppy);
+            var source = animals();
+            assertThat(exercises.filterByQuery(source, "  LuN  ")).isNotSameAs(source).containsExactly(puppy);
+            assertThat(source).containsExactly(puppy, cat, dog);
         }
         @Test void queryAlsoMatchesBreedSubstring() {
-            assertThat(exercises.filterByQuery(animals(), "MIX")).containsExactly(puppy, dog);
+            var source = animals();
+            assertThat(exercises.filterByQuery(source, "MIX")).isNotSameAs(source).containsExactly(puppy, dog);
+            assertThat(source).containsExactly(puppy, cat, dog);
         }
         @Test void emptyQueryGivesAllAnimals() {
-            assertThat(exercises.filterByQuery(animals(), "  ")).containsExactly(puppy, cat, dog);
+            var source = animals();
+            assertThat(exercises.filterByQuery(source, "  ")).isNotSameAs(source).containsExactly(puppy, cat, dog);
+            assertThat(source).containsExactly(puppy, cat, dog);
         }
         @Test void adoptionUsesAdoptableFlagIndependently() {
-            assertThat(exercises.filterByPurpose(animals(), "ADOPT")).containsExactly(puppy, dog);
+            var source = animals();
+            assertThat(exercises.filterByPurpose(source, new String("ADOPT")))
+                    .isNotSameAs(source).containsExactly(puppy, dog);
+            assertThat(source).containsExactly(puppy, cat, dog);
         }
         @Test void fosteringUsesFosterableFlagIndependently() {
-            assertThat(exercises.filterByPurpose(animals(), "FOSTER")).containsExactly(cat, dog);
+            var source = animals();
+            assertThat(exercises.filterByPurpose(source, new String("FOSTER")))
+                    .isNotSameAs(source).containsExactly(cat, dog);
+            assertThat(source).containsExactly(puppy, cat, dog);
         }
     }
     @Nested class Lesson6 {

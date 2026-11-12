@@ -78,6 +78,24 @@ def test_summary_displays_available_values_and_missing_lessons(monkeypatch, summ
     assert capture.texts == expected
 
 
+@pytest.mark.parametrize('code', ['BACKEND_UNAVAILABLE', 'BACKEND_TIMEOUT'])
+@pytest.mark.parametrize('address', ['http://127.0.0.1:8080', 'http://127.0.0.1:18080'])
+def test_connection_error_identifies_the_configured_backend(monkeypatch, code, address):
+    from nicegui import Client, ui
+    from frontend import app as shelter_app
+    from frontend.api_client import ApiError
+
+    monkeypatch.setattr(shelter_app, 'API_URL', address)
+    with Client(ui.page('/connection-error-test')) as page_client:
+        with ui.column() as root:
+            shelter_app.render_error(ApiError(code, 'Connection failed'))
+        texts = [element.text for element in root.descendants() if hasattr(element, 'text')]
+        assert any(address in text for text in texts)
+        if address.endswith(':18080'):
+            assert not any('port 8080' in text for text in texts)
+    page_client.delete()
+
+
 @pytest.mark.parametrize('page', ['catalog', 'detail'])
 @pytest.mark.parametrize('labels', [None, [], ['Supplied opportunity']])
 def test_pages_show_supplied_badges_or_one_notice_and_preserve_shelter_links(monkeypatch, page, labels):

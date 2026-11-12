@@ -110,7 +110,8 @@ Only `ExerciseNotImplementedException` from a summary exercise becomes a missing
 | --- | --- | --- |
 | 200 | 없음 | 목록/보호소/조회 성공. 0개 목록도 성공 |
 | 400 | `INVALID_REQUEST` | 동물 목록 쿼리의 알 수 없는 키, 중복 키 또는 잘못된 값 |
-| 404 | `NOT_FOUND` | 구현된 ID 조회가 `null` 반환 |
+| 404 | `NOT_FOUND` | 구현된 ID 조회가 `null` 반환하거나 요청한 경로가 없음 |
+| 405 | `METHOD_NOT_ALLOWED` | 경로에서 지원하지 않는 요청 방식. `Allow` 헤더로 지원 방식을 안내 |
 | 501 | `EXERCISE_NOT_IMPLEMENTED` | 선택한 필터 또는 ID 조회 TODO 미완성, lessonId로 수업 안내. 요약 수업 6·7 미완성은 200의 summary에 표시 |
 | 500 | `INTERNAL_ERROR` | 예상하지 못한 서버 예외. 내부 진단은 응답에서 숨김 |
 
@@ -119,7 +120,11 @@ Only `ExerciseNotImplementedException` from a summary exercise becomes a missing
 ```
 
 ```json
-{"code":"NOT_FOUND","message":"동물을 찾을 수 없습니다.","lessonId":null}
+{"code":"NOT_FOUND","message":"요청한 정보를 찾을 수 없습니다.","lessonId":null}
+```
+
+```json
+{"code":"METHOD_NOT_ALLOWED","message":"지원하지 않는 요청 방식입니다.","lessonId":null}
 ```
 
 ```json
